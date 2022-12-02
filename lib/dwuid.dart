@@ -12,7 +12,7 @@ final _timestampUidInitialValue = _bigInt8 << 48;
 final _uniqueTimestampUidInitialValue = _timestampUidInitialValue << 68;
 final _randomUidInitialValue = _bigInt9 << 116;
 
-Map<BigInt, String> _generateBaseEncodingMap(String alphabet) {
+Map<BigInt, String> _createBaseEncodingMap(String alphabet) {
   final base = alphabet.length;
   final Map<BigInt, String> encodingMap = {};
   for (int i = 0; i < base; i++) {
@@ -22,7 +22,7 @@ Map<BigInt, String> _generateBaseEncodingMap(String alphabet) {
   return encodingMap;
 }
 
-Map<String, BigInt> _generateBaseDecodingMap(String alphabet,
+Map<String, BigInt> _createBaseDecodingMap(String alphabet,
     {Map<String, Set<String>>? alternatives}) {
   final base = alphabet.length;
   final Map<String, BigInt> decodingMap = {};
@@ -45,9 +45,8 @@ Map<String, BigInt> _generateBaseDecodingMap(String alphabet,
 class _Base58 {
   static const _alphabet =
       '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
-  static final _encodingMap = _generateBaseEncodingMap(_alphabet);
-  static final _decodingMap =
-      _generateBaseDecodingMap(_alphabet, alternatives: {
+  static final _encodingMap = _createBaseEncodingMap(_alphabet);
+  static final _decodingMap = _createBaseDecodingMap(_alphabet, alternatives: {
     '1': {'I', 'l'},
     'o': {'0', 'O'}
   });
@@ -81,8 +80,8 @@ class _Base58 {
 class _Base64 {
   static const _alphabet =
       '-0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz';
-  static final _encodingMap = _generateBaseEncodingMap(_alphabet);
-  static final _decodingMap = _generateBaseDecodingMap(_alphabet);
+  static final _encodingMap = _createBaseEncodingMap(_alphabet);
+  static final _decodingMap = _createBaseDecodingMap(_alphabet);
 
   static String encodeBigInt(BigInt value) {
     String string = '';
@@ -229,7 +228,7 @@ class TimestampUid implements Uid {
     return TimestampUid.fromBigInt(value);
   }
 
-  TimestampUid._(this._value);
+  const TimestampUid._(this._value);
 
   factory TimestampUid.fromBigInt(BigInt value) {
     final bitLength = value.bitLength;
@@ -302,7 +301,7 @@ class RandomUid implements Uid {
     return RandomUid.fromBigInt(value);
   }
 
-  RandomUid._(this._value);
+  const RandomUid._(this._value);
 
   factory RandomUid.fromBigInt(BigInt value) {
     final bitLength = value.bitLength;
