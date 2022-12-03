@@ -144,9 +144,10 @@ int _uidVersion(BigInt value) =>
 
 enum UidEncoding { base58, base64 }
 
-abstract class Uid {
+class Uid {
   static final _timestampUidGenerator = TimestampUidGenerator();
   static final _randomUidGenerator = RandomUidGenerator();
+  final BigInt _value;
 
   static TimestampUid timestamp() => _timestampUidGenerator.next();
 
@@ -162,6 +163,17 @@ abstract class Uid {
         : _Base64.decodeBigInt(source);
     return Uid.fromBigInt(value);
   }
+
+  static Uid? tryParse(String source,
+      {UidEncoding encoding = UidEncoding.base58}) {
+    try {
+      return parse(source, encoding: encoding);
+    } on FormatException {
+      return null;
+    }
+  }
+
+  const Uid._(this._value);
 
   factory Uid.fromBigInt(BigInt value) {
     final bitLength = value.bitLength;
@@ -189,23 +201,27 @@ abstract class Uid {
   }
 
   @override
-  int get hashCode;
+  int get hashCode => _value.hashCode;
 
   @override
-  bool operator ==(Object other);
+  bool operator ==(Object other) =>
+      other is Uid ? _value == other._value : false;
 
   @override
-  String toString([UidEncoding encoding = UidEncoding.base58]);
+  String toString([UidEncoding encoding = UidEncoding.base58]) {
+    return encoding == UidEncoding.base58
+        ? _Base58.encodeBigInt(_value)
+        : _Base64.encodeBigInt(_value);
+  }
 
-  BigInt toBigInt();
+  BigInt toBigInt() => _value;
 
-  Uint8List toBytes();
+  Uint8List toBytes() => _bigIntToBytes(_value);
 }
 
-class TimestampUid implements Uid {
+class TimestampUid extends Uid {
   static int? _lastTimestamp;
   static TimestampUid? _lastTimestampUid;
-  final BigInt _value;
 
   static TimestampUid now() {
     final timestamp = DateTime.now().millisecondsSinceEpoch;
@@ -228,7 +244,16 @@ class TimestampUid implements Uid {
     return TimestampUid.fromBigInt(value);
   }
 
-  const TimestampUid._(this._value);
+  static TimestampUid? tryParse(String source,
+      {UidEncoding encoding = UidEncoding.base58}) {
+    try {
+      return parse(source, encoding: encoding);
+    } on FormatException {
+      return null;
+    }
+  }
+
+  const TimestampUid._(BigInt value) : super._(value);
 
   factory TimestampUid.fromBigInt(BigInt value) {
     final bitLength = value.bitLength;
@@ -265,19 +290,6 @@ class TimestampUid implements Uid {
   bool operator ==(Object other) =>
       other is TimestampUid ? _value == other._value : false;
 
-  @override
-  String toString([UidEncoding encoding = UidEncoding.base58]) {
-    return encoding == UidEncoding.base58
-        ? _Base58.encodeBigInt(_value)
-        : _Base64.encodeBigInt(_value);
-  }
-
-  @override
-  BigInt toBigInt() => _value;
-
-  @override
-  Uint8List toBytes() => _bigIntToBytes(_value);
-
   DateTime toDateTime() {
     final millisecondsSinceEpoch =
         ((_value >> (_value.bitLength - 52)) - _timestampUidInitialValue)
@@ -286,9 +298,7 @@ class TimestampUid implements Uid {
   }
 }
 
-class RandomUid implements Uid {
-  final BigInt _value;
-
+class RandomUid extends Uid {
   static RandomUid parse(String source,
       {UidEncoding encoding = UidEncoding.base58}) {
     final length = source.length;
@@ -301,7 +311,16 @@ class RandomUid implements Uid {
     return RandomUid.fromBigInt(value);
   }
 
-  const RandomUid._(this._value);
+  static RandomUid? tryParse(String source,
+      {UidEncoding encoding = UidEncoding.base58}) {
+    try {
+      return parse(source, encoding: encoding);
+    } on FormatException {
+      return null;
+    }
+  }
+
+  const RandomUid._(BigInt value) : super._(value);
 
   factory RandomUid.fromBigInt(BigInt value) {
     final bitLength = value.bitLength;
@@ -330,19 +349,6 @@ class RandomUid implements Uid {
   @override
   bool operator ==(Object other) =>
       other is RandomUid ? _value == other._value : false;
-
-  @override
-  String toString([UidEncoding encoding = UidEncoding.base58]) {
-    return encoding == UidEncoding.base58
-        ? _Base58.encodeBigInt(_value)
-        : _Base64.encodeBigInt(_value);
-  }
-
-  @override
-  BigInt toBigInt() => _value;
-
-  @override
-  Uint8List toBytes() => _bigIntToBytes(_value);
 }
 
 abstract class UidGenerator {

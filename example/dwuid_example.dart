@@ -10,7 +10,9 @@ void main() {
 
   TimestampUid.now().toString(); // => Jbbq9G615
   TimestampUid.parse('Jbbq9G615'); // => TimestampUid
+  TimestampUid.tryParse('Jbbq9G615'); // => TimestampUid
   RandomUid.parse('Jbbq9G615'); // throws FormatException
+  RandomUid.tryParse('Jbbq9G615'); // => null
 
   final timestampUidGenerator = TimestampUidGenerator();
   timestampUidGenerator.next().toString(); // => 4arZkrd5gj9ndREUza23a
