@@ -1,3 +1,7 @@
+## 1.0.3
+
+- Fixed bitwise operations for web compatibility.
+
 ## 1.0.2
 
 - Changed abstract class [Uid] to concrete and added static methods [tryParse] for classes [Uid].

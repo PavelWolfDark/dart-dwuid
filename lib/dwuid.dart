@@ -130,9 +130,14 @@ Uint8List _bigIntToBytes(BigInt value) {
 
 BigInt _randomBigInt(Random random, int bits) {
   BigInt value = BigInt.zero;
+  int shift = 32;
+  int max = 0x100000000;
   while (bits > 0) {
-    final shift = bits < 32 ? bits : 32;
-    final randomInt = random.nextInt(1 << shift);
+    if (bits < shift) {
+      shift = bits;
+      max = pow(2, bits).toInt();
+    }
+    final randomInt = random.nextInt(max);
     value = (value << shift) + BigInt.from(randomInt);
     bits -= shift;
   }
