@@ -1,3 +1,7 @@
+## 1.0.4
+
+- Fixed caching for [TimestampUid.now] method.
+
 ## 1.0.3
 
 - Fixed bitwise operations for web compatibility.

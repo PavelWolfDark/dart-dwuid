@@ -231,6 +231,7 @@ class TimestampUid extends Uid {
   static TimestampUid now() {
     final timestamp = DateTime.now().millisecondsSinceEpoch;
     if (timestamp != _lastTimestamp) {
+      _lastTimestamp = timestamp;
       final value = _timestampUidInitialValue + BigInt.from(timestamp);
       _lastTimestampUid = TimestampUid._(value);
     }
