@@ -159,9 +159,10 @@ class Location {
 
   @override
   // ignore: hash_and_equals
-  bool operator ==(Object other) => other is Location
-      ? (latitude == other.latitude && longitude == other.longitude)
-      : false;
+  bool operator ==(Object other) =>
+      other is Location &&
+      latitude == other.latitude &&
+      longitude == other.longitude;
 
   double distanceTo(Location other) {
     final otherLatitude = other.latitude;
@@ -187,12 +188,12 @@ class BoundingBox {
 
   @override
   // ignore: hash_and_equals
-  bool operator ==(Object other) => other is BoundingBox
-      ? (minLatitude == other.minLatitude &&
-          minLongitude == other.minLongitude &&
-          maxLatitude == other.maxLatitude &&
-          maxLongitude == other.maxLongitude)
-      : false;
+  bool operator ==(Object other) =>
+      other is BoundingBox &&
+      minLatitude == other.minLatitude &&
+      minLongitude == other.minLongitude &&
+      maxLatitude == other.maxLatitude &&
+      maxLongitude == other.maxLongitude;
 }
 
 class _Geohash {
@@ -323,8 +324,7 @@ class Uid {
   int get hashCode => _value.hashCode;
 
   @override
-  bool operator ==(Object other) =>
-      other is Uid ? _value == other._value : false;
+  bool operator ==(Object other) => other is Uid && _value == other._value;
 
   @override
   String toString([UidEncoding encoding = UidEncoding.base58]) {
@@ -408,7 +408,7 @@ class TimestampUid extends Uid {
 
   @override
   bool operator ==(Object other) =>
-      other is TimestampUid ? _value == other._value : false;
+      other is TimestampUid && _value == other._value;
 
   DateTime toDateTime() {
     final millisecondsSinceEpoch =
@@ -468,7 +468,7 @@ class RandomUid extends Uid {
 
   @override
   bool operator ==(Object other) =>
-      other is RandomUid ? _value == other._value : false;
+      other is RandomUid && _value == other._value;
 }
 
 class GeohashUid extends Uid {
