@@ -1,38 +1,42 @@
-import 'dart:math';
 import 'package:dwuid/dwuid.dart';
 
 void main() {
-  Uid.timestamp().toString(); // => 4arZkrd5dFjDAxGo2EcMM
-  Uid.parse('4arZkrd5dFjDAxGo2EcMM'); // => TimestampUid
+  print(Uid.timestamp()); // => 4arZkrd5dFjDAxGo2EcMM
+  print(Uid.parse(
+      '4arZkrd5dFjDAxGo2EcMM')); // => TimestampUid(4arZkrd5dFjDAxGo2EcMM)
 
-  Uid.random().toString(); // => 5LsB98o4MByiNMWV8cxni
-  Uid.parse('5LsB98o4MByiNMWV8cxni'); // => RandomUid
+  print(Uid.random()); // => 5LsB98o4MByiNMWV8cxni
+  print(Uid.parse(
+      '5LsB98o4MByiNMWV8cxni')); // => RandomUid(5LsB98o4MByiNMWV8cxni)
 
-  TimestampUid.now().toString(); // => Jbbq9G615
-  TimestampUid.parse('Jbbq9G615'); // => TimestampUid
-  TimestampUid.tryParse('Jbbq9G615'); // => TimestampUid
-  RandomUid.parse('Jbbq9G615'); // throws FormatException
-  RandomUid.tryParse('Jbbq9G615'); // => null
+  print(Uid.geohash(0.123456, 0.123456)); // => 2oHjQuePNCD
+  print(Uid.parse('2oHjQuePNCD')); // => GeohashUid(2oHjQuePNCD)
+
+  print(TimestampUid.now()); // => Jbbq9G615
+  print(TimestampUid.parse('Jbbq9G615')); // => Jbbq9G615
+  print(TimestampUid.tryParse('Jbbq9G615')); // => Jbbq9G615
+//  print(RandomUid.parse('Jbbq9G615')); // throws FormatException
+  print(RandomUid.tryParse('Jbbq9G615')); // => null
+
+  print(GeohashUid.fromCoordinates(-45.123456, -90.123456)); // => 2gctpGXKR4c
+  print(GeohashUid.fromCoordinates(45.123456, 90.123456)); // => 2q7EUgg3MZF
+  print(GeohashUid.parse('2gctpGXKR4c')
+      .toLocation()); // => Location(-45.123456, -90.123456)
+  print(GeohashUid.parse('2q7EUgg3MZF')
+      .toLocation()); // => Location(45.123456, 90.123456)
 
   final timestampUidGenerator = TimestampUidGenerator();
-  timestampUidGenerator.next().toString(); // => 4arZkrd5gj9ndREUza23a
-  timestampUidGenerator.next().toString(); // => 4arZkrd5gv5Gan2fDe7w3
-  timestampUidGenerator.next().toString(); // => 4arZkrd5gv5Gan2fDe7w4
-  timestampUidGenerator.next().toString(); // => 4arZkrd5h8pqZmCarCpyb
-  timestampUidGenerator.next().toString(); // => 4arZkrd5h8pqZmCarCpyc
+  print(timestampUidGenerator.next()); // => 4arZkrd5gj9ndREUza23a
+  print(timestampUidGenerator.next()); // => 4arZkrd5gv5Gan2fDe7w3
+  print(timestampUidGenerator.next()); // => 4arZkrd5gv5Gan2fDe7w4
+  print(timestampUidGenerator.next()); // => 4arZkrd5h8pqZmCarCpyb
+  print(timestampUidGenerator.next()); // => 4arZkrd5h8pqZmCarCpyc
 
   final randomUidGenerator = RandomUidGenerator();
-  final secureRandomUidGenerator = RandomUidGenerator(random: Random.secure());
-  randomUidGenerator.next().toString(); // => 56cuNWELu2ZEqeo7QCfLn
-  randomUidGenerator.next().toString(); // => 5Td5b6CEySZJGFZ6CA2iW
-  randomUidGenerator.next().toString(); // => 59zXzHMpg1QRb57zJVGsQ
-  randomUidGenerator.next().toString(); // => 5EraHXGw21VpRhWTUYoCa
-  randomUidGenerator.next().toString(); // => 5StxyheEN6wDoM3pfsBEP
-
-  final shortCodeGenerator = RandomUidGenerator(bits: 32);
-  shortCodeGenerator.next().toString(); // => 4w3jVu
-  shortCodeGenerator.next().toString(); // => 4gkbgq
-  shortCodeGenerator.next().toString(); // => 54pVyr
-  shortCodeGenerator.next().toString(); // => 4xKnyc
-  shortCodeGenerator.next().toString(); // => 4wyANi
+//  final secureRandomUidGenerator = RandomUidGenerator(random: Random.secure());
+  print(randomUidGenerator.next()); // => 56cuNWELu2ZEqeo7QCfLn
+  print(randomUidGenerator.next()); // => 5Td5b6CEySZJGFZ6CA2iW
+  print(randomUidGenerator.next()); // => 59zXzHMpg1QRb57zJVGsQ
+  print(randomUidGenerator.next()); // => 5EraHXGw21VpRhWTUYoCa
+  print(randomUidGenerator.next()); // => 5StxyheEN6wDoM3pfsBEP
 }

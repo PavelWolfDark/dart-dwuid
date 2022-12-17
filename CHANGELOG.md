@@ -1,3 +1,7 @@
+## 1.1.0
+
+- Added Geohash version of [Uid] based on geographic coordinates.
+
 ## 1.0.4
 
 - Fixed caching for [TimestampUid.now] method.

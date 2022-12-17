@@ -1,6 +1,6 @@
 name: dwuid
 description: DWUID — universally unique lexicographic human-friendly decentralized identifier.
-version: 1.0.4
+version: 1.1.0
 # homepage: https://gitlab.darkwolf.cloud/cyberviking/dart-dwuid
 homepage: https://github.com/PavelWolfDark/dart-dwuid
 

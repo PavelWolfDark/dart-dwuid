@@ -5,12 +5,14 @@ import 'dart:typed_data';
 
 final _bigInt8 = BigInt.from(8);
 final _bigInt9 = BigInt.from(9);
+final _bigInt10 = BigInt.from(10);
 final _bigInt58 = BigInt.from(58);
 final _bigInt64 = BigInt.from(64);
 final _bigInt256 = BigInt.from(256);
 final _timestampUidInitialValue = _bigInt8 << 48;
 final _uniqueTimestampUidInitialValue = _timestampUidInitialValue << 68;
 final _randomUidInitialValue = _bigInt9 << 116;
+final _geohashUidInitialValue = _bigInt10 << 56;
 
 Map<BigInt, String> _createBaseEncodingMap(String alphabet) {
   final base = alphabet.length;
@@ -144,8 +146,115 @@ BigInt _randomBigInt(Random random, int bits) {
   return value;
 }
 
+double _degreesInRadians(double degrees) => degrees * pi / 180;
+
 int _uidVersion(BigInt value) =>
     ((value >> (value.bitLength - 4)).toInt() & 7) + 1;
+
+class Location {
+  final double latitude;
+  final double longitude;
+
+  const Location(this.latitude, this.longitude);
+
+  @override
+  // ignore: hash_and_equals
+  bool operator ==(Object other) => other is Location
+      ? (latitude == other.latitude && longitude == other.longitude)
+      : false;
+
+  double distanceTo(Location other) {
+    final otherLatitude = other.latitude;
+    final otherLongitude = other.longitude;
+    final lat1 = _degreesInRadians(latitude);
+    final lat2 = _degreesInRadians(otherLatitude);
+    final dLat = _degreesInRadians(otherLatitude - latitude);
+    final dLon = _degreesInRadians(otherLongitude - longitude);
+    return 12742000 *
+        asin(sqrt(pow(sin(dLat / 2), 2) +
+            cos(lat1) * cos(lat2) * pow(sin(dLon / 2), 2)));
+  }
+}
+
+class BoundingBox {
+  final double minLatitude;
+  final double minLongitude;
+  final double maxLatitude;
+  final double maxLongitude;
+
+  const BoundingBox(
+      this.minLatitude, this.minLongitude, this.maxLatitude, this.maxLongitude);
+
+  @override
+  // ignore: hash_and_equals
+  bool operator ==(Object other) => other is BoundingBox
+      ? (minLatitude == other.minLatitude &&
+          minLongitude == other.minLongitude &&
+          maxLatitude == other.maxLatitude &&
+          maxLongitude == other.maxLongitude)
+      : false;
+}
+
+class _Geohash {
+  static BigInt encode(double latitude, double longitude) {
+    BigInt geohash = BigInt.zero;
+    double minLatitude = -90;
+    double minLongitude = -180;
+    double maxLatitude = 90;
+    double maxLongitude = 180;
+    bool isEvenBit = true;
+    for (int i = 0; i < 56; i++) {
+      geohash <<= 1;
+      if (isEvenBit) {
+        final deltaLongitude = (minLongitude + maxLongitude) / 2;
+        if (longitude > deltaLongitude) {
+          geohash += BigInt.one;
+          minLongitude = deltaLongitude;
+        } else {
+          maxLongitude = deltaLongitude;
+        }
+      } else {
+        final deltaLatitude = (minLatitude + maxLatitude) / 2;
+        if (latitude > deltaLatitude) {
+          geohash += BigInt.one;
+          minLatitude = deltaLatitude;
+        } else {
+          maxLatitude = deltaLatitude;
+        }
+      }
+      isEvenBit = !isEvenBit;
+    }
+    return geohash;
+  }
+
+  static BoundingBox decode(BigInt geohash) {
+    double minLatitude = -90;
+    double minLongitude = -180;
+    double maxLatitude = 90;
+    double maxLongitude = 180;
+    bool isEvenBit = true;
+    for (int i = 55; i >= 0; i--) {
+      final bit = (geohash >> i) & BigInt.one;
+      if (isEvenBit) {
+        final deltaLongitude = (minLongitude + maxLongitude) / 2;
+        if (bit == BigInt.one) {
+          minLongitude = deltaLongitude;
+        } else {
+          maxLongitude = deltaLongitude;
+        }
+      } else {
+        final deltaLatitude = (minLatitude + maxLatitude) / 2;
+        if (bit == BigInt.one) {
+          minLatitude = deltaLatitude;
+        } else {
+          maxLatitude = deltaLatitude;
+        }
+      }
+      isEvenBit = !isEvenBit;
+    }
+    return BoundingBox(minLatitude, minLongitude, maxLatitude, maxLongitude);
+  }
+}
 
 enum UidEncoding { base58, base64 }
 
@@ -157,6 +266,9 @@ class Uid {
   static TimestampUid timestamp() => _timestampUidGenerator.next();
 
   static RandomUid random() => _randomUidGenerator.next();
+
+  static GeohashUid geohash(double latitude, double longitude) =>
+      GeohashUid.fromCoordinates(latitude, longitude);
 
   static Uid parse(String source, {UidEncoding encoding = UidEncoding.base58}) {
     final length = source.length;
@@ -191,6 +303,8 @@ class Uid {
         return TimestampUid.fromBigInt(value);
       case 2:
         return RandomUid.fromBigInt(value);
+      case 3:
+        return GeohashUid.fromBigInt(value);
       default:
         throw FormatException('Invalid UID version: $version', value);
     }
@@ -355,6 +469,84 @@ class RandomUid extends Uid {
   @override
   bool operator ==(Object other) =>
       other is RandomUid ? _value == other._value : false;
+}
+
+class GeohashUid extends Uid {
+  static GeohashUid parse(String source,
+      {UidEncoding encoding = UidEncoding.base58}) {
+    final length = source.length;
+    if (length < 10) {
+      throw FormatException('Invalid GeohashUID length: $length', source);
+    }
+    final value = encoding == UidEncoding.base58
+        ? _Base58.decodeBigInt(source)
+        : _Base64.decodeBigInt(source);
+    return GeohashUid.fromBigInt(value);
+  }
+
+  static GeohashUid? tryParse(String source,
+      {UidEncoding encoding = UidEncoding.base58}) {
+    try {
+      return parse(source, encoding: encoding);
+    } on FormatException {
+      return null;
+    }
+  }
+
+  const GeohashUid._(BigInt value) : super._(value);
+
+  factory GeohashUid.fromBigInt(BigInt value) {
+    final bitLength = value.bitLength;
+    if (bitLength != 60) {
+      throw FormatException('Invalid GeohashUID bit length: $bitLength', value);
+    }
+    final version = _uidVersion(value);
+    if (version != 3) {
+      throw FormatException('Invalid GeohashUID version: $version', value);
+    }
+    return GeohashUid._(value);
+  }
+
+  factory GeohashUid.fromBytes(Uint8List bytes) {
+    final length = bytes.length;
+    if (length < 8) {
+      throw FormatException('Invalid GeohashUID byte length: $length', bytes);
+    }
+    final value = _bytesToBigInt(bytes);
+    return GeohashUid.fromBigInt(value);
+  }
+
+  factory GeohashUid.fromCoordinates(double latitude, double longitude) {
+    if (latitude < -90 || latitude > 90) {
+      throw RangeError.range(latitude, -90, 90, 'latitude');
+    }
+    if (longitude < -180 || longitude > 180) {
+      throw RangeError.range(longitude, -180, 180, 'longitude');
+    }
+    final value =
+        _geohashUidInitialValue + _Geohash.encode(latitude, longitude);
+    return GeohashUid._(value);
+  }
+
+  factory GeohashUid.fromLocation(Location location) =>
+      GeohashUid.fromCoordinates(location.latitude, location.longitude);
+
+  BoundingBox toBoundingBox() {
+    return _Geohash.decode(_value - _geohashUidInitialValue);
+  }
+
+  Location toLocation() {
+    final boundingBox = toBoundingBox();
+    final deltaLatitude =
+        (boundingBox.minLatitude + boundingBox.maxLatitude) / 2;
+    final deltaLongitude =
+        (boundingBox.minLongitude + boundingBox.maxLongitude) / 2;
+    final normalizedLatitude = deltaLatitude.toStringAsFixed(6);
+    final normalizedLongitude = deltaLongitude.toStringAsFixed(6);
+    final latitude = double.parse(normalizedLatitude);
+    final longitude = double.parse(normalizedLongitude);
+    return Location(latitude, longitude);
+  }
 }
 
 abstract class UidGenerator {
